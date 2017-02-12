@@ -123,6 +123,38 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
 }
 
+UniValue getconfirmations(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+                "getconfirmations\n"
+                        "\nReturns the number of confirmations.\n"
+                        "\nResult:\n"
+                        "n    (numeric) The current block count\n"
+                        "\nExamples:\n"
+                + HelpExampleCli("getconfirmations", "")
+                + HelpExampleRpc("getconfirmations", "")
+        );
+
+    LOCK(cs_main);
+
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+
+    CTransactionRef tx;
+    uint256 hashBlock;
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("No such mempool or blockchain transaction"));
+
+    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+    if (mi != mapBlockIndex.end() && (*mi).second) {
+        CBlockIndex *pindex = (*mi).second;
+        if (chainActive.Contains(pindex)) {
+            return 1 + chainActive.Height() - pindex->nHeight;
+        }
+    }
+    return 0;
+}
+
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -933,6 +965,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
     { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true,  {"txid","verbose"} },
+    { "rawtransactions",    "getconfirmations",       &getconfirmations,       true,  {"txid"} },
     { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true,  {"transactions","outputs","locktime"} },
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true,  {"hexstring"} },
     { "rawtransactions",    "decodescript",           &decodescript,           true,  {"hexstring"} },
