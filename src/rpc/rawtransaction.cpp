@@ -143,9 +143,7 @@ UniValue getconfirmations(const JSONRPCRequest& request)
     CTransactionRef tx;
     uint256 hashBlock;
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such mempool or blockchain transaction"
-                                                                            : "No such mempool transaction. Use -txindex to enable blockchain transaction queries") +
-                                                       ". Use gettransaction for wallet transactions.");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("No such mempool or blockchain transaction"));
 
     BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
     if (mi != mapBlockIndex.end() && (*mi).second) {
